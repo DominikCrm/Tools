@@ -20,9 +20,15 @@ function saveTheme(mode){localStorage.setItem('combined-theme-mode',mode);localS
 globalTheme.addEventListener('change',()=>saveTheme(globalTheme.value));homeTheme.addEventListener('change',()=>saveTheme(homeTheme.value));
 window.addEventListener('storage',e=>{if(e.key==='combined-theme-mode')setGlobalTheme(e.newValue||'system');});
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if((localStorage.getItem('combined-theme-mode')||'system')==='system')setGlobalTheme('system');});
-let activeAppUrl=null;
-function openApp(key){document.getElementById('appName').textContent=titles[key];setGlobalTheme(localStorage.getItem('combined-theme-mode')||'system');if(activeAppUrl)URL.revokeObjectURL(activeAppUrl);const appHtml=new TextDecoder().decode(Uint8Array.from(atob(pages[key]),c=>c.charCodeAt(0)));activeAppUrl=URL.createObjectURL(new Blob([appHtml],{type:'text/html'}));frame.src=activeAppUrl;home.hidden=true;shell.classList.add('active');document.title=titles[key];}
-function goHome(){shell.classList.remove('active');home.hidden=false;frame.src='about:blank';if(activeAppUrl){URL.revokeObjectURL(activeAppUrl);activeAppUrl=null;}document.title='Meine Apps';}
+function openApp(key){document.getElementById('appName').textContent=titles[key];setGlobalTheme(localStorage.getItem('combined-theme-mode')||'system');const appUrl=new URL(window.location.pathname,window.location.origin);appUrl.searchParams.set('app',key);frame.src=appUrl.href;home.hidden=true;shell.classList.add('active');document.title=titles[key];}
+function goHome(){shell.classList.remove('active');home.hidden=false;frame.src='about:blank';document.title='Meine Apps';}
 document.querySelectorAll('[data-app]').forEach(button=>button.addEventListener('click',()=>openApp(button.dataset.app)));
 document.getElementById('homeButton').addEventListener('click',goHome);
+const embeddedApp=new URLSearchParams(window.location.search).get('app');
+if(embeddedApp&&pages[embeddedApp]){
+  const appHtml=new TextDecoder().decode(Uint8Array.from(atob(pages[embeddedApp]),c=>c.charCodeAt(0)));
+  document.open();
+  document.write(appHtml);
+  document.close();
+}
 </script></body></html>
